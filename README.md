@@ -1,4 +1,4 @@
-# Live-Dense-Reconstruction-with-a-Single-Moving-Camera
+# Plane-Detection-with-a-Single-Moving-Camera
 
 The overlapping processes which make up our reconstruction pipeline
 ![image](https://github.com/tatfook/3d-from-infrared-picture/blob/master/overview.jpg)
