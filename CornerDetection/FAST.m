@@ -13,7 +13,7 @@ threshold=50;  %阈值
 nth = 9; %FAST-9
 figure(3);imshow(img);title('FAST角点检测');hold on;
 tic;
-points = zeros(M,N);
+% points = zeros(M,N);
 s = zeros(M,N);
 for px=4:M-3
     for py=4:N-3%若I1、I9与中心I0的差均小于阈值，则不是候选点
@@ -33,7 +33,7 @@ for px=4:M-3
                 lv = d > threshold; %logic value
                 if nConti(lv,nth) == 1
                     s(px,py) = sum(d);
-                    points(px,py) = 1;  %储存特征点坐标
+%                     points(px,py) = 1;  %储存特征点坐标
                 end
             end
         end
@@ -42,18 +42,23 @@ for px=4:M-3
 
 %% Non Maximal Suppression 非极大值抑制 5x5
 [x,y] = find(s~=0);
-mask = zeros(5,5);
+
 for m = 1:length(x)
-    area = points(x(m)-2:x(m)+2,y(m)-2:y(m)+2);
-    if points(x(m),y(m)) == 0
+    area = s(x(m)-2:x(m)+2,y(m)-2:y(m)+2);
+    if x(m) == 347
+        a = 1;
+    end
+    if s(x(m),y(m)) == 0
         continue;
-    else if sum(sum(area)) == 1
+    else if length(find(area)) == 1
+%             sum(sum(area)) == 1
             continue;
         else
+            mask = zeros(5,5);
             ms = s(x(m)-2:x(m)+2,y(m)-2:y(m)+2);
             [mx,my] = find(ms == max(max(ms)));
             mask(mx(1),my(1)) = 1;
-            points(x(m)-2:x(m)+2,y(m)-2:y(m)+2) = mask.*area;
+%             points(x(m)-2:x(m)+2,y(m)-2:y(m)+2) = mask.*area;
             s(x(m)-2:x(m)+2,y(m)-2:y(m)+2) = mask.*ms;
         end
     end
