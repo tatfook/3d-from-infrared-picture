@@ -66,7 +66,7 @@ function models.FAST( img )
 			    		lv[i] = models.bool2num(d[i]>threshold);
 			    	end
 
-			    	if PD.nConti(lv.n) == true
+			    	if PD.nConti(lv.n) == true then
 			    		s[px][py] = models.ArraySum(d);
 			    	end
 			    end
@@ -82,7 +82,7 @@ function models.FAST( img )
 			if #models.find(area,0,false) ~= 1 then
 				local mask = models.zeros(5,5);
 				local mx,my = models.find(area,models.Array2Max(area));
-				mask[mx[1]][my[1]] = 1；
+				mask[mx[1]][my[1]] = 1;
 				local ma = models.DotProduct(mask,area);
 				for i = x[m]-2,x[m]+2 do
 					for j = y[m]-2,y[m]+2 do
