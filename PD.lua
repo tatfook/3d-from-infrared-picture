@@ -24,7 +24,7 @@ else
     	output = models.connect(models.subvector(A,m[1]+1),models.subvector(A,_,m[1]));
     	table.insert(output,1,0);
     	local B = models.diff(models.find(output));
-    	result = math.max(table.unpack(B))-1 >= n;
+    	result = math.max(unpack(B))-1 >= n;
     end
 end
 return result;
