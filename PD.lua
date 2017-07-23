@@ -24,15 +24,15 @@ else
     	output = models.connect(models.subvector(A,m[1]+1),models.subvector(A,_,m[1]));
     	table.insert(output,1,0);
     	local B = models.diff(models.find(output));
-    	result = math.max(unpack(B))-1 >= n;
+    	result = math.max(table.unpack(B))-1 >= n;
     end
 end
 return result;
 end
 
 --FAST corner point detection algorithm
--- img is a gray image
-function models.FAST( img )
+-- img is a gray image,k is the number of strongest points
+function models.FAST( img,k )
 	local x,y;
 	local threshold = 45;
 	local n = 10;
@@ -45,12 +45,11 @@ function models.FAST( img )
 
 	for px = 4,H-3 do
 		for py = 4,W-3 do
-			local dt1 = models.bool2num(math.abs(img[px-3][py]-img[px][py])>threshold);
-			local dt9 = models.bool2num(math.abs(img[px+3][py]-img[px][py])>threshold);
-			if dt1 + dt9 > 0 then
-				local dt5 = models.bool2num(math.abs(img[px][py+3]-img[px][py])>threshold);
-				local dt13 = models.bool2num(math.abs(img[px][py-3]-img[px][py])>threshold);
-			    if dt5 + dt9 + dt1 + dt13 >= 3 then
+			local dt1 = models.bool2num(math.abs(img[px-3][py]-img[px][py])<threshold);
+			local dt9 = models.bool2num(math.abs(img[px+3][py]-img[px][py])<threshold);
+			local dt5 = models.bool2num(math.abs(img[px][py+3]-img[px][py])<threshold);
+			local dt13 = models.bool2num(math.abs(img[px][py-3]-img[px][py])<threshold);
+			    if dt5 + dt9 + dt1 + dt13 < 3 then
 			    	local IS = {};
 			    	local block = models.submatrix(img,px-3,px+3,py-3,py+3);
 			    	
@@ -62,15 +61,21 @@ function models.FAST( img )
 			    	d = models.ArrayAdd(IS,-img[px][py]);
 			    	local lv = {};
 			    	for i = 1,16 do
-			    		d[i] = math.abs(d[i]);
 			    		lv[i] = models.bool2num(d[i]>threshold);
 			    	end
 
 			    	if PD.nConti(lv.n) == true then
-			    		s[px][py] = models.ArraySum(d);
+			    		s[px][py] = models.ArraySum(models.DotProduct(lv,d));
+			    	else
+			    		for i = 1,16 do
+			    			lv[i] = models.bool2num(-d[i]>threshold);
+			    		end
+			    		if PD.nConti(lv,n) == true then
+			    			s[px][py] = -models.ArraySum(models.DotProduct(lv,d));
+			    		end
 			    	end
 			    end
-			end
+			
 		end
 	end
 
@@ -90,6 +95,22 @@ function models.FAST( img )
 					end
 				end
 				mask = models.zeros(5,5);
+			end
+		end
+	end
+
+	--Select Strongest point 选择最强点
+	if k ~= nil then
+		local m,n = models.ArraySize(s);
+		local sv = models.reshape(s,1,m*n);
+		local sortFunc = function(a, b) return b < a end
+		table.sort( sv, sortFunc );
+		local line = sv[k];
+		for i = 1,m do
+			for j = 1,n do
+				if s[i][j]<line then
+					s[i][j] = 0;
+				end
 			end
 		end
 	end
