@@ -92,8 +92,12 @@ function models.subvector( vector,n,m )
 		m = #vector;
 	end	
 	local subv = {};
-	for i = n,m do
-		subv[#subv + 1] = vector[i];
+	if n ~= m then
+		for i = n,m do
+			subv[#subv + 1] = vector[i]; --type is table
+	    end
+	else
+		subv = vector[m];  --type is number
 	end
 	return subv;
 end
@@ -122,7 +126,7 @@ function models.submatrix( matrix,a,b,c,d )
 	return subm;
 end
 
---connect 2 array
+--connect 2 vector
 function models.connect( A,B )
 	local result = {};
 	for k,v in pairs(A) do
@@ -134,7 +138,30 @@ function models.connect( A,B )
 	return result;
 end
 
-
+--turn the size of A to m * n
+--return type is table
+function models.reshape( A, m,n )
+	local a, b = models.ArraySize(A);
+	local V = {};
+	local result = {};
+	if b ~= nil then --A is a matrix
+		for k,v in pairs(A) do
+			V = models.connect(V,A[k]);
+		end
+		if m == 1 then
+			result = V;
+		else
+		for i = 1,m do
+			result[i] = models.subvector(V,1+n*(i-1),n*i);
+		end
+	    end
+	else --A is a vector, m usually will not be 1
+		for i = 1,m do 
+			result[i] = models.subvector(A,1+n*(i-1),n*i);
+		end		
+	end
+	return result;
+end
 
 function models.bool2num( bool )
 	local num;
