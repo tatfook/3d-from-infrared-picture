@@ -32,7 +32,7 @@ end
 
 --FAST corner point detection algorithm
 -- img is a gray image,k is the number of strongest points
-function models.FAST( img,k )
+function PD.FAST( img,k )
 	local x,y;
 	local threshold = 45;
 	local n = 10;
