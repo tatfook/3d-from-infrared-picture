@@ -1,4 +1,4 @@
-function [ x,y ] = FAST( img,k )
+function [ x,y ] = FAST( img,k,bool )
 %Find corner point detection using FAST-9 algorithm, threshold is 50
 %  I为输入图像
 threshold=50;  %阈值
@@ -19,11 +19,16 @@ tic;
 s = zeros(H,W);
 for px=4:H-3
     for py=4:W-3%若I1、I9与中心I0的差均小于阈值，则不是候选点
-        delta(1)=Sxp(pic(px-3,py)-pic(px,py),threshold); %x1
-        delta(2)=Sxp(pic(px+3,py)-pic(px,py),threshold);  %x9
-        delta(3)=Sxp(pic(px,py+3)-pic(px,py),threshold);  %x5
-        delta(4)=Sxp(pic(px,py-3)-pic(px,py),threshold);  %x13
-        if length(find(delta==0))<3
+%         delta(1)=Sxp(pic(px-3,py)-pic(px,py),threshold)==0; %x1
+%         delta(2)=Sxp(pic(px+3,py)-pic(px,py),threshold)==0;  %x9
+%         delta(3)=Sxp(pic(px,py+3)-pic(px,py),threshold)==0;  %x5
+%         delta(4)=Sxp(pic(px,py-3)-pic(px,py),threshold)==0;  %x13
+        delta(1) = abs(pic(px-3,py)-pic(px,py))<threshold;
+        delta(2) = abs(pic(px+3,py)-pic(px,py))<threshold;
+        delta(3) = abs(pic(px,py+3)-pic(px,py))<threshold;
+        delta(4) = abs(pic(px,py-3)-pic(px,py))<threshold;
+        if sum(delta) <3 
+            %length(find(delta==0))<3
             IS =[];
             block=pic(px-3:px+3,py-3:py+3);
             for i = 1:16
@@ -34,10 +39,12 @@ for px=4:H-3
             if nConti(lv,nth) == 1
                 s(px,py) = sum(lv.*d);
             else 
-                d = pic(px,py)-IS;
-                lv = d>threshold;
+%                 d = pic(px,py)-IS;
+%                 lv = d>threshold;
+                lv = -d>threshold;
                 if nConti(lv,nth)==1
-                    s(px,py) = sum(lv.*d);
+                    s(px,py) = -sum(lv.*(d));
+%                     s(px,py) = sum(lv.*d);
                 end
             end
         end
@@ -96,14 +103,14 @@ for m = 1:length(x)
 end
 
 
-%% select Strongest point 最强点抑制
-
+%% select Strongest point 选择最强点
+if bool == true
 [m,n] = size(s);
 [val,index] = sort(s(:),'descend');
 b=zeros(m*n,1);
 b(index(1:k))=val(1:k);
 s = reshape(b,[m,n]);
-
+end
 
 %%
 [y,x] = find(s~=0);  %最终特征点的坐标
