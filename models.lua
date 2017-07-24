@@ -1,7 +1,7 @@
 
 models = {};
 
---return size of 1D or 2D array 
+--@return size of 1D or 2D array 
 function models.ArraySize( arr )
 	local a = #arr;
 	local b;
@@ -16,8 +16,9 @@ end
 local ArraySize = models.ArraySize;
 
 --return the key of specified value
---如果bool为true，返回value索引，否则返回不等于value的索引
---默认返回0元素真索引
+--@param value: double or integer
+--@param bool: 如果bool为true，返回value索引，否则返回不等于value的索引
+--@return x,y:  ...  默认返回0元素真索引
 --如果tab为1维，返回的y为nil88
 function models.find(tab,value,bool)
     if value==nil then
@@ -66,8 +67,8 @@ end
 
 
 -- 1th difference
-function models.diff( vector )
-    if nth==nil then
+function models.diff( vector, nth )
+    	if nth==nil then
 		nth = 1;
 	end
 	local result = {};
@@ -85,9 +86,10 @@ end
 
 --截取vector中n到m的一部分
 function models.subvector( vector,n,m )
-    if n==nil then
+	if n==nil then
 		n = 1;
-	end	
+	end
+
 	if m==nil then
 		m = #vector;
 	end	
@@ -95,7 +97,7 @@ function models.subvector( vector,n,m )
 	if n ~= m then
 		for i = n,m do
 			subv[#subv + 1] = vector[i]; --type is table
-	    end
+		end
 	else
 		subv = vector[m];  --type is number
 	end
