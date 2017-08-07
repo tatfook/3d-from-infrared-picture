@@ -68,7 +68,9 @@ function PD.FAST( img,k )
 			    		s[px][py] = models.ArraySum(models.DotProduct(lv,d));
 			    	else
 			    		for i = 1,16 do
-			    			lv[i] = models.bool2num(-d[i]>threshold);
+
+						
+						lv[i] = models.bool2num(-d[i]>threshold);
 			    		end
 			    		if PD.nConti(lv,n) == true then
 			    			s[px][py] = -models.ArraySum(models.DotProduct(lv,d));
@@ -118,3 +120,75 @@ function PD.FAST( img,k )
 	x,y = models.find(s,0,false);
 	return x,y;
 end
+
+
+function PD.getT(patch,gx,gy)
+	local d = #patch
+	local T = imP.zeros(2,2)
+	local Tij;
+	for i = 1,d do
+		for j = 1,d do
+			Tij = {{gx[i][j]^2,gx[i][j]*gy[i][j]},{gx[i][j]*gy[i][j],gy[i][j]^2}}
+			T = imP.add(T,Tij);
+		end
+	end
+	return T;
+end
+
+function PD.getA(dpatch,gx,gy)
+	local d = #dpatch
+	local A = imP.zeros(6,1)
+	local Aij;
+	local m;
+	for i = 1,d do
+		for j = 1,d do
+			m = {{0},{0},{0},{0},{gx[i][j]},{gy[i][j]}}
+			Aij = imP.ArrayMutl(m,dpatch[i][j]);
+			local A = imP.add(A,Aij);
+		end
+	end
+	return A;  --6x1 matrix
+end
+
+
+
+--KLT tracker
+--List is the list of images
+--corners is x and y from FAST
+-- local len = #x
+-- local corners = {};
+-- for i = 1,len do
+-- 	corners[i] = {x[i],y[i]}
+-- end
+function PD.KLT( List,corners )
+	local windowSize = 15;
+	local rows = #img;
+	local cols = #img[1];
+	local l = #corners;
+	local Counter = imP.ones(1,300)
+	local newCorners = imP.zeros(5,l)
+	newCorners[1] = corners;
+	for j = 2,5 do
+		local I = List[j-1];
+		local J = List[j];
+		for corner_i =1,l do
+			local a1 = corners[corner_i][1]-windowSize
+			local a2 = corners[corner_i][1]+windowSize
+			local b1 = corners[corner_i][2]-windowSize
+			local b2 = corners[corner_i][2]+windowSize
+			if a1 > 0 and a2 <= rows and b1 > 0 and b2 <= cols then				
+				local patch = submatrix(I,a1,a2,b1,b2)
+				local gx,gy = gradient(patch)
+				-- local x = {a1,a2}
+				-- local y = {b1,b2}
+				local T = getT(patch,gx,gy)
+				local dpatch = submatrix(I-J,a1,a2,b1,b2)
+				local A = getA(dpatch,gx,gy)
+				local e = {{A[5]},{A[6]}}  --horizontal
+				local z = matrix.mul(matrix.invert(T),e)
+				newCorners[j][corner_i] = imP.round(corners[corner_i]+matrix.transpose(z))
+			end
+		end
+	end
+end
+
