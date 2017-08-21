@@ -338,6 +338,19 @@ local function gj_elim_pp( A )
 	return B
 
 end
+
+-- FIVE_POINT_ALGORITHM Given five points matches between two images, and the
+-- intrinsic parameters of each camera. Estimate the essential matrix E, the 
+-- rotation matrix R and translation vector t, between both images.
+-- returns E_all, R_all, t_all, Eo_all
+-- R_all and t_all are the rotation matrices and translation
+-- vectors of camera 2 for the different essential matrices, such that a 3D
+-- point in camera 1 reference frame can be transformed into the camera 2
+-- reference frame through p_2 = R{n}*p_1 + t{n}. 
+-- Eo_all is the essential matrix before the imposing the structure U*diag([1 1 0])*V'. 
+-- It should help get a better feeling on the accuracy of the solution. All these
+-- return values a nx1 cell arrays. 
+
 -- Arguments:
 -- pts1, pts2 - assumed to have dimension 2x5 and of equal size. 
 -- K1, K2 - 3x3 intrinsic parameters of cameras 1 and 2 respectively
