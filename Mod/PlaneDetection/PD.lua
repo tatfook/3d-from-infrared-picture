@@ -250,33 +250,34 @@ function PD.KLT( List,corners )
 	return newCorners;
 end
 
+local s_g = {
+	{0.0039,0.0156,0.0234,0.0156,0.0039},
+	{0.0156,0.0625,0.0938,0.0625,0.0156},
+	{0.0234,0.0938,0.1406,0.0938,0.0234},
+	{0.0156,0.0625,0.0938,0.0625,0.0156},
+	{0.0039,0.0156,0.0234,0.0156,0.0039},
+};
 local function PD.gfilter( I,h,w )
-	local g = {};
-	g[1] = {0.0039,0.0156,0.0234,0.0156,0.0039}
-	g[2] = {0.0156,0.0625,0.0938,0.0625,0.0156}
-	g[3] = {0.0234,0.0938,0.1406,0.0938,0.0234}
-	g[4] = {0.0156,0.0625,0.0938,0.0625,0.0156}
-	g[5] = {0.0039,0.0156,0.0234,0.0156,0.0039}
-	local m;
-	local Io = matrix.copy(I);
+	local Io_ = matrix.copy(I);
 	for i = 3,h-2 do
 		for j = 3,w-2 do
-			Io[i][j] = imP.round(imP.ArraySum(imP.DotProduct(imP.submatrix(I,i-2,i+2,j-2,j+2),g)));
+			Io_[i][j] = imP.round(imP.ArraySum(imP.DotProduct(imP.submatrix(I,i-2,i+2,j-2,j+2),s_g)));
 		end
 	end
-	return Io;
+	return Io_;
 end
 
 --downsample 2
 local function PD.ds2( I,h,w )
-	local Io = {}
+	local Io_ = {}
+	
 	for i = 1,math.floor(h/2) do
-		Io[i] = {}
+		Io_[i] = {}
 		for j = 1,math.floor(w/2) do
-			Io[i][j] = I[i*2][j*2]
+			Io_[i][j] = I[i*2][j*2]
 		end
 	end
-	return Io;	
+	return Io_;	
 end
 
 function PD.gPyramid( I,n )
@@ -289,7 +290,6 @@ function PD.gPyramid( I,n )
 		G[L] = PD.ds2(Gg,h,w)
 	end
 	return G
-
 end
 
 -- TODO
