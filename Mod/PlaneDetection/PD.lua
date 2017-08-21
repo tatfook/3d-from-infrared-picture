@@ -250,4 +250,142 @@ function PD.KLT( List,corners )
 	return newCorners;
 end
 
+local function PD.gfilter( I,h,w )
+	local g = {};
+	g[1] = {0.0039,0.0156,0.0234,0.0156,0.0039}
+	g[2] = {0.0156,0.0625,0.0938,0.0625,0.0156}
+	g[3] = {0.0234,0.0938,0.1406,0.0938,0.0234}
+	g[4] = {0.0156,0.0625,0.0938,0.0625,0.0156}
+	g[5] = {0.0039,0.0156,0.0234,0.0156,0.0039}
+	local m;
+	local Io = matrix.copy(I);
+	for i = 3,h-2 do
+		for j = 3,w-2 do
+			Io[i][j] = imP.round(imP.ArraySum(imP.DotProduct(imP.submatrix(I,i-2,i+2,j-2,j+2),g)));
+		end
+	end
+	return Io;
+end
 
+--downsample 2
+local function PD.ds2( I,h,w )
+	local Io = {}
+	for i = 1,math.floor(h/2) do
+		Io[i] = {}
+		for j = 1,math.floor(w/2) do
+			Io[i][j] = I[i*2][j*2]
+		end
+	end
+	return Io;	
+end
+
+function PD.gPyramid( I,n )
+	local h,w = imP.ArraySize(I)
+	local G = {};
+	G[1] = I;
+	local Gg = {};
+	for L = 2,n do
+		Gg = PD.gfilter(G[L-1],h,w)
+		G[L] = PD.ds2(Gg,h,w)
+	end
+	return G
+
+end
+
+-- TODO
+-- function null
+--function lu
+
+local function p1p1( p1,p2 )
+	local pout = {p1[1]*p2[1],p1[2]*p2[2],p1[3]*p2[3],
+			p1[1]*p2[2]+p1[2]*p2[1],p1[1]*p2[3]+p1[3]*p2[1],
+			p1[2]*p2[3]+p1[3]*p2[2],p1[1]*p2[4]+p1[4]*p2[1],
+			p1[2]*p2[4]+p1[4]*p2[2],p1[3]*p2[4]+p1[4]*p2[3],p1[4]*p2[4]}
+	return pout;
+
+end
+
+local function p2p1( p1,p2 )
+	local pout = {p1[1]*p2[1],p1[2]*p2[2],p1[3]*p2[3],
+			p1[1]*p2[2]+p1[4]*p2[1],p1[2]*p2[1]+p1[4]*p2[2],
+			p1[1]*p2[3]+p1[5]*p2[1],p1[3]*p2[1]+p1[5]*p2[3],
+			p1[2]*p2[3]+p1[6]*p2[2],p1[3]*p2[2]+p1[6]*p2[3],
+			p1[4]*p2[3]+p1[5]*p2[2]+p1[6]*p2[1],
+			p1[1]*p2[4]+p1[7]*p2[1],p1[2]*p2[4]+p1[8]*p2[2],p1[3]*p2[4]+p1[9]*p2[3]
+			p1[4]*p2[4]+p1[7]*p2[2]+p1[8]*p2[1],
+			p1[5]*p2[4]+p1[7]*p2[3]+p1[9]*p2[1],
+			p1[6]*p2[4]+p1[8]*p2[3]+p1[9]*p2[2],
+			p1[7]*p2[4]+p1[10]*p2[1],p1[8]*p2[4]+p1[10]*p2[2],p1[9]*p2[4]+p1[10]*p2[3],p1[10]*p2[4]}
+	return pout;
+end
+
+local function gj_elim_pp( A )
+	local V,U = lu(A)  
+	local B = imP.zeros(10,20)
+	B[1] = U[1]
+	B[2] = U[2]
+	B[3] = U[3] 
+	B[4] = U[4]
+	B[10] = array1D.mulnum(U[10],1/U[10][10])
+	B[9] = array1D.mulnum(array1D.sub(U[9],array1D.mulnum(B[10],U[9][10])),1/U[9][9])
+	B[8] = array1D.mulnum(array1D,sub(array1D.sub(U[8],array1D.mulnum(B[9],U[8][9])),array1D.mulnum(B[10],U[8][10])),1/U[8][8])
+	B[8] = array1D.mulnum(array1D,sub(array1D,sub(array1D.sub(U[7],array1D.mulnum(B[8],U[7][8])),
+		array1D.mulnum(B[9],U[7][9])),array1D.mulnum(B[10],U[7][10])),1/U[7][7])
+	B[6] = array1D.mulnum(array1D,sub(array1D,sub(array1D,sub(array1D.sub(U[6],array1D.mulnum(B[7],U[6][7])),
+		array1D.mulnum(B[8],U[6][8])),array1D.mulnum(B[9],U[6][9])),array1D.mulnum(B[10],U[6][10])),1/U[6][6])
+	B[5] = array1D.mulnum(array1D,sub(array1D,sub(array1D,sub(array1D,sub(array1D.sub(U[5],array1D.mulnum(B[6],U[5][6])),
+		array1D.mulnum(B[7],U[5][7])),array1D.mulnum(B[8],U[5][8])),array1D.mulnum(B[9],U[5][9])),array1D.mulnum(B[10],U[5][10])),1/U[5][5])
+	return B
+
+end
+-- Arguments:
+-- pts1, pts2 - assumed to have dimension 2x5 and of equal size. 
+-- K1, K2 - 3x3 intrinsic parameters of cameras 1 and 2 respectively
+function fivePoint( pts1,pts2,K1,K2 )
+	local N = 5
+	local oneN = imP.ones(1,N)	
+	local m = matrix.copy(pts1)
+	m[3] = oneN;
+	local q1 = matrix.div(K1,m);
+	m[1] = pts2[1]
+	m[2] = pts2[2]
+	local q2 = matrix.div(K2,m);
+	local q = {array1D.DotProduct(q1[1],q2[1]),array1D.DotProduct(q1[2],q2[1]),array1D.DotProduct(q1[3],q2[1]),
+	          array1D.DotProduct(q1[1],q2[2]),array1D.DotProduct(q1[2],q2[2]),array1D.DotProduct(q1[3],q2[2]),
+	          array1D.DotProduct(q1[1],q2[3]),array1D.DotProduct(q1[2],q2[3]),array1D.DotProduct(q1[3],q2[3])}
+    q = matrix.transpose(q)
+    local mask = {}
+    mask[1] = {1,2,3};
+    mask[2] = {4,5,6};
+    mask[3] = {7,8,9};
+    local nullSpace = fivePoint.null(q)  --9x4
+    nullSpace = matrix.transpose(nullSpace)
+    local Xmat = imP.reshape(nullSpace[1],3,3)
+    local Ymat = imP.reshape(nullSpace[2],3,3)
+    local Zmat = imP.reshape(nullSpace[3],3,3)
+    local Wmat = imP.reshape(nullSpace[4],3,3)
+    local X_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Xmat),K1);
+    local Y_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Ymat),K1);
+    local Z_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Zmat),K1);
+    local X_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Wmat),K1);
+    --det(F)
+    local detF = matrix.add(p2p1(matrix.sub(p1p1({X_[1][2],Y_[1][2],Z_[1][2],W_[1][2]},
+                           {X_[2][3],Y_[2][3],Z_[2][3],W_[2][3]}),
+						    p1p1({X_[1][3],Y_[1][3],Z_[1][3],W_[1][3]},
+                           {X_[2][2],Y_[2][2],Z_[2][2],W_[2][2]})),
+						    {X_[3][1],Y_[3][1],Z_[3][1],W_[3][1]}),
+			     matrix.add(p2p1(matrix.sub(p1p1({X_[1][3],Y_[1][3],Z_[1][3],W_[1][3]},
+                           {X_[2][1],Y_[2][1],Z_[2][1],W_[2][1]}),
+						    p1p1({X_[1][1],Y_[1][1],Z_[1][1],W_[1][1]},
+                           {X_[2][3],Y_[2][3],Z_[2][3],W_[2][3]})),
+						    {X_[3][1],Y_[3][1],Z_[3][1],W_[3][1]}),
+						   p2p1(matrix.sub(p1p1({X_[1][1],Y_[1][1],Z_[1][1],W_[1][1]},
+                           {X_[2][2],Y_[2][2],Z_[2][2],W_[2][2]}),
+						    p1p1({X_[1][2],Y_[1][2],Z_[1][2],W_[1][2]},
+                           {X_[2][1],Y_[2][1],Z_[2][1],W_[2][1]})),
+						    {X_[3][3],Y_[3][3],Z_[3][3],W_[3][3]})))
+    --FlippedV
+    local EE_tll = p1p1
+
+
+end
