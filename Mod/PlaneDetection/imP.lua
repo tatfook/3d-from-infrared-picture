@@ -134,7 +134,7 @@ function imP.submatrix( matrix,a,b,c,d )
 		a = 1;
 	end	
 	if b==nil then
-		m = #matrix;
+		b = #matrix;
 	end	
 	if c==nil then
 		c = 1;
