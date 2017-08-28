@@ -296,81 +296,212 @@ end
 -- function null
 --function lu
 
+local function onlydoforA( _A )
+	local A = {}
+	local indexA = {1,2,4,5,6,11,8,12,10,14,7,15,17,9,16,18,3,13,19,20}
+	for i = 1, #_A do
+		A[i] = {}
+		for j = 1,#indexA do 
+			A[i][j] = _A[i][indexA[j]]
+		end
+	end
+	return A;
+end
+
+
+--add 3 matrix
+local function add3( m1,m2,m3 )
+	local mtx = {}
+	for i = 1,#m1 do
+		mtx[i] = {}
+		for j = 1,#m1[1] do
+			mtx[i][j] = m1[i][j] + m2[i][j] + m3[i][j]
+		end
+	end
+	return mtx
+end
+
+--add 3 matrix
+local function add3v( v1,v2,v3 )
+	local v_ = {}
+	for i = 1,#v1 do
+		v_[i] = v1[i] + v2[i] + v3[i]
+	end
+	return v_
+end
+
 local function p1p1( p1,p2 )
-	local pout = {p1[1]*p2[1],p1[2]*p2[2],p1[3]*p2[3],
+	return {p1[1]*p2[1],p1[2]*p2[2],p1[3]*p2[3],
 			p1[1]*p2[2]+p1[2]*p2[1],p1[1]*p2[3]+p1[3]*p2[1],
 			p1[2]*p2[3]+p1[3]*p2[2],p1[1]*p2[4]+p1[4]*p2[1],
 			p1[2]*p2[4]+p1[4]*p2[2],p1[3]*p2[4]+p1[4]*p2[3],p1[4]*p2[4]}
-	return pout;
+	-- return pout;
 
 end
 
 local function p2p1( p1,p2 )
-	local pout = {p1[1]*p2[1],p1[2]*p2[2],p1[3]*p2[3],
+	return {p1[1]*p2[1],p1[2]*p2[2],p1[3]*p2[3],
 			p1[1]*p2[2]+p1[4]*p2[1],p1[2]*p2[1]+p1[4]*p2[2],
 			p1[1]*p2[3]+p1[5]*p2[1],p1[3]*p2[1]+p1[5]*p2[3],
 			p1[2]*p2[3]+p1[6]*p2[2],p1[3]*p2[2]+p1[6]*p2[3],
 			p1[4]*p2[3]+p1[5]*p2[2]+p1[6]*p2[1],
-			p1[1]*p2[4]+p1[7]*p2[1],p1[2]*p2[4]+p1[8]*p2[2],p1[3]*p2[4]+p1[9]*p2[3]
+			p1[1]*p2[4]+p1[7]*p2[1],p1[2]*p2[4]+p1[8]*p2[2],p1[3]*p2[4]+p1[9]*p2[3],
 			p1[4]*p2[4]+p1[7]*p2[2]+p1[8]*p2[1],
 			p1[5]*p2[4]+p1[7]*p2[3]+p1[9]*p2[1],
 			p1[6]*p2[4]+p1[8]*p2[3]+p1[9]*p2[2],
 			p1[7]*p2[4]+p1[10]*p2[1],p1[8]*p2[4]+p1[10]*p2[2],p1[9]*p2[4]+p1[10]*p2[3],p1[10]*p2[4]}
-	return pout;
+	-- return pout;
 end
 
-local function gj_elim_pp( A )
-	local V,U = lu(A)  
-	local B = imP.zeros(10,20)
-	B[1] = U[1]
-	B[2] = U[2]
-	B[3] = U[3] 
-	B[4] = U[4]
-	B[10] = array1D.mulnum(U[10],1/U[10][10])
-	B[9] = array1D.mulnum(array1D.sub(U[9],array1D.mulnum(B[10],U[9][10])),1/U[9][9])
-	B[8] = array1D.mulnum(array1D,sub(array1D.sub(U[8],array1D.mulnum(B[9],U[8][9])),array1D.mulnum(B[10],U[8][10])),1/U[8][8])
-	B[8] = array1D.mulnum(array1D,sub(array1D,sub(array1D.sub(U[7],array1D.mulnum(B[8],U[7][8])),
-		array1D.mulnum(B[9],U[7][9])),array1D.mulnum(B[10],U[7][10])),1/U[7][7])
-	B[6] = array1D.mulnum(array1D,sub(array1D,sub(array1D,sub(array1D.sub(U[6],array1D.mulnum(B[7],U[6][7])),
-		array1D.mulnum(B[8],U[6][8])),array1D.mulnum(B[9],U[6][9])),array1D.mulnum(B[10],U[6][10])),1/U[6][6])
-	B[5] = array1D.mulnum(array1D,sub(array1D,sub(array1D,sub(array1D,sub(array1D.sub(U[5],array1D.mulnum(B[6],U[5][6])),
-		array1D.mulnum(B[7],U[5][7])),array1D.mulnum(B[8],U[5][8])),array1D.mulnum(B[9],U[5][9])),array1D.mulnum(B[10],U[5][10])),1/U[5][5])
-	return B
+-- PZ4PZ3 Function responsible for multiplying a 4th order z polynomial p1
+--   by a 3rd order z polynomial p2
+--   p1 - Is a row vector arranged like: z4 | z3 | z2 | z | 1
+--   p2 - Is a row vector arranged like: z3 | z2 | z | 1
+--   po - Is a row vector arranged like: z7 | z6 | z5 | z4 | z3 | z2 | z | 1
+local function pz4pz3( p1,p2 )
+	return {p1[1]*p2[1],
+		        p1[2]*p2[1] + p1[1]*p2[2],
+		        p1[3]*p2[1] + p1[2]*p2[2] + p1[1]*p2[3],
+		        p1[4]*p2[1] + p1[3]*p2[2] + p1[2]*p2[3] + p1[1]*p2[4],
+		        p1[5]*p2[1] + p1[4]*p2[2] + p1[3]*p2[3] + p1[2]*p2[4],
+		        p1[5]*p2[2] + p1[4]*p2[3] + p1[3]*p2[4],
+		        p1[5]*p2[3] + p1[4]*p2[4],
+		        p1[5]*p2[4]};  
+    -- return po;
+end
 
+-- compute the cross product of two 3D column vectors.
+local function cross_vec3( u,v ) --u,v size is 1x3
+	return {{u[1][2]*v[1][3] - u[1][3]*v[1][2]},
+		        u[1][3]*v[1][1] - u[1][1]*v[1][3],
+		        u[1][1]*v[1][2] - u[1][2]*v[1][1]}};
+    -- return out
+end
+
+-- PZ4PZ3 Function responsible for multiplying a 6th order z polynomial p1
+--   by a 4th order z polynomial p2
+--   p1 - Is a row vector arranged like: z6 | z5 | z4 | z3 | z2 | z | 1
+--   p2 - Is a row vector arranged like: z4 | z3 | z2 | z | 1
+--   po - Is a row vector arranged like: 
+--       z10 | z9 | z8 | z7 | z6 | z5 | z4 | z3 | z2 | z | 1
+local function pz6pz4( p1,p2 )
+	return  {p1[1]*p2[1],
+		        p1[2]*p2[1] + p1[1]*p2[2],
+		        p1[3]*p2[1] + p1[2]*p2[2] + p1[1]*p2[3], 
+		        p1[4]*p2[1] + p1[3]*p2[2] + p1[2]*p2[3] + p1[1]*p2[4],
+		        p1[5]*p2[1] + p1[4]*p2[2] + p1[3]*p2[3] + p1[2]*p2[4] + p1[1]*p2[5],
+		        p1[6]*p2[1] + p1[5]*p2[2] + p1[4]*p2[3] + p1[3]*p2[4] + p1[2]*p2[5],
+		        p1[7]*p2[1] + p1[6]*p2[2] + p1[5]*p2[3] + p1[4]*p2[4] + p1[3]*p2[5],
+		        p1[7]*p2[2] + p1[6]*p2[3] + p1[5]*p2[4] + p1[4]*p2[5],
+		        p1[7]*p2[3] + p1[6]*p2[4] + p1[5]*p2[5], 
+		        p1[7]*p2[4] + p1[6]*p2[5], 
+		        p1[7]*p2[5]};
+    -- return po
+end
+
+-- PZ4PZ3 Function responsible for multiplying a 7th order z polynomial p1
+--   by a 3rd order z polynomial p2
+--   p1 - Is a row vector arranged like: z7 | z6 | z5 | z4 | z3 | z2 | z | 1
+--   p2 - Is a row vector arranged like: z3 | z2 | z | 1
+--   po - Is a row vector arranged like: 
+--       z10 | z9 | z8 | z7 | z6 | z5 | z4 | z3 | z2 | z | 1
+local function pz7pz3( p1,p2 )
+	return {p1[1]*p2[1],
+		        p1[2]*p2[1] + p1[1]*p2[2],
+		        p1[3]*p2[1] + p1[2]*p2[2] + p1[1]*p2[3],
+		        p1[4]*p2[1] + p1[3]*p2[2] + p1[2]*p2[3] + p1[1]*p2[4],
+		        p1[5]*p2[1] + p1[4]*p2[2] + p1[3]*p2[3] + p1[2]*p2[4],
+		        p1[6]*p2[1] + p1[5]*p2[2] + p1[4]*p2[3] + p1[3]*p2[4], 
+		        p1[7]*p2[1] + p1[6]*p2[2] + p1[5]*p2[3] + p1[4]*p2[4], 
+		        p1[8]*p2[1] + p1[7]*p2[2] + p1[6]*p2[3] + p1[5]*p2[4],
+		        p1[8]*p2[1] + p1[7]*p2[3] + p1[6]*p2[4],
+		        p1[8]*p2[3] + p1[7]*p2[4],
+		        p1[8]*p2[4]}; 
+    -- return po;
+end
+
+-- PZ3PZ3 Function responsible for multiplying two 3rd order z polynomial
+--   p1, p2 - Are row vector arranged like: z3 | z2 | z | 1
+--   po - Is a row vector arranged like: z6 | z5 | z4 | z3 | z2 | z | 1
+local function pz3pz3( p1,p2 )
+	return {p1[1]*p2[1],
+		        p1[1]*p2[2] + p1[2]*p2[1],
+		        p1[1]*p2[3] + p1[2]*p2[2] + p1[3]*p2[1],
+		        p1[1]*p2[4] + p1[2]*p2[3] + p1[3]*p2[2] + p1[4]*p2[1],
+		        p1[2]*p2[4] + p1[3]*p2[3] + p1[4]*p2[2],
+		        p1[3]*p2[4] + p1[4]*p2[3],
+		        p1[4]*p2[4]};
+    -- return po
+end
+
+-- Given Matrix A we perform partial pivoting as per specified in
+local function gj_elim_pp( A )
+	local V,U = lu(A)  --TODO function lu
+	local B = imP.zeros(10,20)
+	B[1] = U[1]; B[2] = U[2]; B[3] = U[3]; B[4] = U[4];
+	for i = 1,20 do
+		B[10][i] = U[10][i]/U[10][10]
+		B[9][i] = (U[9][i]-U[9][10]*B[10][i])/U[9][9]
+		B[8][i] = (U[8][i]-U[8][9]*B[9][i]-U[8][10]*B[10][i])/U[8][8]
+		B[7][i] = (U[7][i]-U[7][8]*B[8][i]-U[7][9]*B[9][i]-U[7][10]*B[10][i])/U[7][7]
+		B[6][i] = (U[6][i]-U[6][7]*B[7][i]-U[6][8]*B[8][i]-U[6][9]*B[9][i]-U[6][10]*B[10][i])/U[6][6]
+		B[5][i] = (U[5][i]-U[5][6]*B[6][i]-U[5][7]*B[7][i]-U[5][8]*B[8][i]-U[5][9]*B[9][i]-U[5][10]*B[10][i])/U[5][5]
+	end
+	return B;
+end
+
+local function partial_subtrc( p1,p2 )
+	local po = {-p2[1],p1[1],-p2[2],p1[2],-p2[3],p1[3],
+				 -p2[4], p1[4],-p2[5],p1[5],-p2[6],p1[6],
+				 -p2[7], p1[7],-p2[8],p1[8],-p2[9],p1[9],-p2[10],p1[10]}
+	return po; 
+end
+
+
+local e_val_inner = imP.zeros(10,10);
+for i = 2,10 do 
+	e_val_inner[i][i-1] = 1
 end
 
 -- FIVE_POINT_ALGORITHM Given five points matches between two images, and the
 -- intrinsic parameters of each camera. Estimate the essential matrix E, the 
--- rotation matrix R and translation vector t, between both images.
--- returns E_all, R_all, t_all, Eo_all
--- R_all and t_all are the rotation matrices and translation
+-- rotation matrix R and translation vector t, between both images. This 
+-- algorithm is based on the method described by David Nister in "An 
+-- Efficient Solution to the Five-Point Relative Pose Problem"
+-- [E_all, R_all, t_all, Eo_all] = FIVE_POINT_ALGORITHM(pts1, pts2, K1, K2) 
+-- returns in E all the valid Essential matrix solutions for the five point correspondence.
+-- returns in R_all and t_all all the rotation matrices and translation
 -- vectors of camera 2 for the different essential matrices, such that a 3D
 -- point in camera 1 reference frame can be transformed into the camera 2
--- reference frame through p_2 = R{n}*p_1 + t{n}. 
--- Eo_all is the essential matrix before the imposing the structure U*diag([1 1 0])*V'. 
--- It should help get a better feeling on the accuracy of the solution. All these
+-- reference frame through p_2 = R{n}*p_1 + t{n}. Eo_all is the essential
+-- matrix before the imposing the structure U*diag([1 1 0])*V'. It should
+-- help get a better feeling on the accuracy of the solution. All these
 -- return values a nx1 cell arrays. 
-
 -- Arguments:
 -- pts1, pts2 - assumed to have dimension 2x5 and of equal size. 
 -- K1, K2 - 3x3 intrinsic parameters of cameras 1 and 2 respectively
-function fivePoint( pts1,pts2,K1,K2 )
-	local N = 5
-	local oneN = imP.ones(1,N)	
-	local m = matrix.copy(pts1)
-	m[3] = oneN;
-	local q1 = matrix.div(K1,m);
-	m[1] = pts2[1]
-	m[2] = pts2[2]
-	local q2 = matrix.div(K2,m);
+local D = {{0,1,0},{-1,0,0},(0,0,1)};
+local z,x,y
+local p_z6,p_z7,Eo = {}
+local U,V,E,R,t,a,b,c,d,P,C,Q,c_2= {}
+local R_all,t_all,E_all,Eo_all = {}
+function PD.fivePoint( pts1,pts2,K1,K2 )
+	-- local N = 5
+	-- local oneN = imP.ones(1,N)	
+	-- local m = matrix.copy(pts1)
+	-- m[3] = oneN;
+	local q1 = matrix.div(K1,{{pts1},{imP.ones(1,5)}});
+	-- m[1] = pts2[1]
+	-- m[2] = pts2[2]
+	local q2 = matrix.div(K2,{{pts2},{imP.ones(1,5)}});
 	local q = {array1D.DotProduct(q1[1],q2[1]),array1D.DotProduct(q1[2],q2[1]),array1D.DotProduct(q1[3],q2[1]),
 	          array1D.DotProduct(q1[1],q2[2]),array1D.DotProduct(q1[2],q2[2]),array1D.DotProduct(q1[3],q2[2]),
 	          array1D.DotProduct(q1[1],q2[3]),array1D.DotProduct(q1[2],q2[3]),array1D.DotProduct(q1[3],q2[3])}
     q = matrix.transpose(q)
-    local mask = {}
-    mask[1] = {1,2,3};
-    mask[2] = {4,5,6};
-    mask[3] = {7,8,9};
+    -- local mask = {{1,2,3},{4,5,6},{7,8,9}}
+    -- mask[1] = {1,2,3};
+    -- mask[2] = {4,5,6};
+    -- mask[3] = {7,8,9};
     local nullSpace = fivePoint.null(q)  --9x4
     nullSpace = matrix.transpose(nullSpace)
     local Xmat = imP.reshape(nullSpace[1],3,3)
@@ -381,24 +512,239 @@ function fivePoint( pts1,pts2,K1,K2 )
     local Y_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Ymat),K1);
     local Z_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Zmat),K1);
     local X_ = matrix.div(matrix.mul(matrix.invert(matrix.transpose(K2)),Wmat),K1);
+    local _A = {}
     --det(F)
-    local detF = matrix.add(p2p1(matrix.sub(p1p1({X_[1][2],Y_[1][2],Z_[1][2],W_[1][2]},
-                           {X_[2][3],Y_[2][3],Z_[2][3],W_[2][3]}),
-						    p1p1({X_[1][3],Y_[1][3],Z_[1][3],W_[1][3]},
-                           {X_[2][2],Y_[2][2],Z_[2][2],W_[2][2]})),
-						    {X_[3][1],Y_[3][1],Z_[3][1],W_[3][1]}),
-			     matrix.add(p2p1(matrix.sub(p1p1({X_[1][3],Y_[1][3],Z_[1][3],W_[1][3]},
-                           {X_[2][1],Y_[2][1],Z_[2][1],W_[2][1]}),
-						    p1p1({X_[1][1],Y_[1][1],Z_[1][1],W_[1][1]},
-                           {X_[2][3],Y_[2][3],Z_[2][3],W_[2][3]})),
-						    {X_[3][1],Y_[3][1],Z_[3][1],W_[3][1]}),
-						   p2p1(matrix.sub(p1p1({X_[1][1],Y_[1][1],Z_[1][1],W_[1][1]},
-                           {X_[2][2],Y_[2][2],Z_[2][2],W_[2][2]}),
-						    p1p1({X_[1][2],Y_[1][2],Z_[1][2],W_[1][2]},
-                           {X_[2][1],Y_[2][1],Z_[2][1],W_[2][1]})),
-						    {X_[3][3],Y_[3][3],Z_[3][3],W_[3][3]})))
+    _A[1] = array1D.add(p2p1(array1D.sub(p1p1({X_[1][2],Y_[1][2],Z_[1][2],W_[1][2]},
+           {X_[2][3],Y_[2][3],Z_[2][3],W_[2][3]}),
+	    p1p1({X_[1][3],Y_[1][3],Z_[1][3],W_[1][3]},
+           {X_[2][2],Y_[2][2],Z_[2][2],W_[2][2]})),
+	    {X_[3][1],Y_[3][1],Z_[3][1],W_[3][1]}),
+	 array1D.add(p2p1(array1D.sub(p1p1({X_[1][3],Y_[1][3],Z_[1][3],W_[1][3]},
+           {X_[2][1],Y_[2][1],Z_[2][1],W_[2][1]}),
+	    p1p1({X_[1][1],Y_[1][1],Z_[1][1],W_[1][1]},
+           {X_[2][3],Y_[2][3],Z_[2][3],W_[2][3]})),
+	    {X_[3][1],Y_[3][1],Z_[3][1],W_[3][1]}),
+	   p2p1(array1D.sub(p1p1({X_[1][1],Y_[1][1],Z_[1][1],W_[1][1]},
+           {X_[2][2],Y_[2][2],Z_[2][2],W_[2][2]}),
+	    p1p1({X_[1][2],Y_[1][2],Z_[1][2],W_[1][2]},
+           {X_[2][1],Y_[2][1],Z_[2][1],W_[2][1]})),
+	    {X_[3][3],Y_[3][3],Z_[3][3],W_[3][3]})))
     --FlippedV
-    local EE_tll = p1p1
+    local EE_t11 = add3(p1p1({Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]},
+			{Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]}),
+		    p1p1({Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]},
+			{Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]}),
+		    p1p1({Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]},
+			{Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]}));
+	-- EE_t12
+    local A_12 = add3(p1p1({Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]},
+			{Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]}),
+		    p1p1({Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]},
+			{Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]}),
+		    p1p1({Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]},
+			{Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]}));
+	-- EE_t13
+    local A_13 = add3(p1p1({Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]},
+			{Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]}),
+		    p1p1({Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]},
+			{Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]}),
+		    p1p1({Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]},
+			{Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]}));
 
+    local EE_t22 = add3(p1p1({Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]},
+			{Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]}),
+		    p1p1({Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]},
+			{Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]}),
+		    p1p1({Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]},
+			{Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]}));
+	-- EE_t23
+    local A_23 = add3(p1p1({Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]},
+			{Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]}),
+		    p1p1({Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]},
+			{Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]}),
+		    p1p1({Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]},
+			{Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]}));
+
+    local EE_t33 = add3(p1p1({Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]},
+			{Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]}),
+		    p1p1({Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]},
+			{Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]}),
+		    p1p1({Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]},
+			{Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]}));
+
+ --    Not used
+	-- EE_t21 = EE_t12;
+	-- EE_t31 = EE_t13;
+	-- EE_t32 = EE_t23;
+	local subarr2 = array1D.mulnum(add3(EE_t11,EE_t22,EE_t33),0.5)
+	local A_11 = array1D.sub(EE_t11,subarr2)
+	-- local A_12 = array1D.copy(EE_t12)
+	-- local A_13 = array1D.copy(EE_t13)
+	local A_21 = A_12
+	local A_22 = array1D.sub(EE_t22,subarr2)
+	-- local A_23 = array1D.copy(EE_t23)
+	local A_31 = A_13
+	local A_32 = A_23
+	local A_33 = array1D.sub(EE_t33,subarr2)
+
+	-- AE_xx
+	_A[2] = add3(p2p1(A_11, {Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]}),
+			p2p1(A_12,{Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]}),
+			p2p1(A_13,{Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]}))
+
+	_A[3] = add3(p2p1(A_11, {Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]}),
+			p2p1(A_12,{Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]}),
+			p2p1(A_13,{Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]}))
+
+	_A[4] = add3(p2p1(A_11, {Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]}),
+			p2p1(A_12,{Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]}),
+			p2p1(A_13,{Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]}))
+
+	_A[5] = add3(p2p1(A_21, {Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]}),
+			p2p1(A_22,{Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]}),
+			p2p1(A_23,{Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]}))
+
+	_A[6] = add3(p2p1(A_21, {Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]}),
+			p2p1(A_22,{Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]}),
+			p2p1(A_23,{Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]}))
+
+	_A[7] = add3(p2p1(A_21, {Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]}),
+			p2p1(A_22,{Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]}),
+			p2p1(A_23,{Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]}))
+
+	_A[8] = add3(p2p1(A_31, {Xmat[1][1],Ymat[1][1],Zmat[1][1],Wmat[1][1]}),
+			p2p1(A_32,{Xmat[2][1],Ymat[2][1],Zmat[2][1],Wmat[2][1]}),
+			p2p1(A_33,{Xmat[3][1],Ymat[3][1],Zmat[3][1],Wmat[3][1]}))
+
+	_A[9] = add3(p2p1(A_31, {Xmat[1][2],Ymat[1][2],Zmat[1][2],Wmat[1][2]}),
+			p2p1(A_32,{Xmat[2][2],Ymat[2][2],Zmat[2][2],Wmat[2][2]}),
+			p2p1(A_33,{Xmat[3][2],Ymat[3][2],Zmat[3][2],Wmat[3][2]}))
+
+	_A[10] = add3(p2p1(A_31, {Xmat[1][3],Ymat[1][3],Zmat[1][3],Wmat[1][3]}),
+			p2p1(A_32,{Xmat[2][3],Ymat[2][3],Zmat[2][3],Wmat[2][3]}),
+			p2p1(A_33,{Xmat[3][3],Ymat[3][3],Zmat[3][3],Wmat[3][3]}))
+
+	-- local _A = {detF,AE_11,AE_12,AE_13,AE_21,AE_22,AE_23,AE_31,AE_32,AE_33}
+	local A = onlydoforA(_A)
+	-- Gauss Jordan elimination (partial pivoting after)
+	local A_el = gj_elim_pp(A)
+	-- Subtraction and forming matrix B
+	local k_row = partial_subtrc(imP.submatrix(A_el,5,5,11,20),imP.submatrix(A_el,6,6,11,20))
+	local l_row = partial_subtrc(imP.submatrix(A_el,7,7,11,20),imP.submatrix(A_el,8,8,11,20))
+	local m_row = partial_subtrc(imP.submatrix(A_el,9,9,11,20),imP.submatrix(A_el,10,10,11,20))
+
+	local B11 = imP.submatrix(k_row,1,1,1,4)
+	local B12 = imP.submatrix(k_row,1,1,5,8)
+	local B13 = imP.submatrix(k_row,1,1,9,13)
+	local B21 = imP.submatrix(l_row,1,1,1,4)
+	local B22 = imP.submatrix(l_row,1,1,5,8)
+	local B23 = imP.submatrix(l_row,1,1,9,13)
+	local B31 = imP.submatrix(m_row,1,1,1,4)
+	local B32 = imP.submatrix(m_row,1,1,5,8)
+	local B33 = imP.submatrix(m_row,1,1,9,13)
+
+	local p_1 = array1D.sub(pz4pz3(B_23,B_12),pz4pz3(B_13,B_22));
+	local p_2 = array1D.sub(pz4pz3(B_13,B_21),pz4pz3(B_23,B_11));
+	local p_3 = array1D.sub(pz3pz3(B_11,B_22),pz3pz3(B_12,B_21));
+
+	local n_row = add3v(pz7pz3(p_1,B_31),pz7pz3(p_2,B_32),pz6pz4(p_3,B_33))
+	--Extracting roots from n_row using companion matrix eigen values
+	n_row = array1D.mulnum(n_row,-1/n_row[1])
+	e_val_inner[1] = imP.subvector(n_row,2,_)
+	local e_val = eig(e_val_inner)  --TODO function eig
+
+	local m = 0
+	for n = 1,10 do
+		if isreal(e_val(n)) = 1 then --TODO function isreal
+			m = m+1
+		end
+	end
+
+	-- local R_all,t_all,E_all,Eo_all = imP.zeros(m,1)
+	m = 1
+	-- local z,x,y
+	-- local p_z6,p_z7,Eo = {}
+	-- local U,V,E,R,t,a,b,c,d,P,C,Q,c_2= {}
+	for n = 1,10 do 
+		if isreal(e_val(n)) = 1 then --TODO function isreal
+			z = e_val(n)
+
+			--Backsubstition
+			p_z6 = {z^6,z^5,z^4,z^3,z^2,z,1}
+			p_z7 = {z^7,p_z6}
+			x = array1D.mul(p_1,p_z7)/array1D(p_3,p_z6)
+			y = array1D.mul(p_2,p_z7)/array1D(p_3,p_z6)
+
+			Eo = matrix.add(Wmat,add3(matrix.mulnum(Xmat,x),matrix.mulnum(Ymat,y),matrix.mulnum(Zmat,z)));
+			Eo_all[m] = Eo;
+			U,V = svd(Eo);
+			E = matrix.mul(matrix.mul(U,diag({1,1,0})),matrix.transpose(V))
+			E_all[m] = E;
+
+			-- lua nargout
+
+			--check determinan signs
+			if(matrix.det(U) < 0) then
+				for i = 1,#U do
+					U[i][3] = -U[i][3]
+				end
+			end
+
+			if(matrix.det(V) < 0) then
+				for i = 1,#V do
+					V[i][3] = -V[i][3]
+				end
+			end
+
+			-- Extracting R and t from E 
+			local q_1,q_2 = {}
+			q_1[1],q_2[1] = {}
+			for i = 1,#q1 do
+				q_1[1][i] = q1[i][1]
+				q_2[1][i] = q2[i][1]
+			end
+
+			for n = 1,4 do
+				t[1] = {}
+				if (n%2 == 0) then
+					for i = 1,#U do 
+						t[1][i] = -U[i][3]
+					end
+				else
+					for i = 1,#U do 
+						t[1][i] = U[i][3]
+					end
+				end
+				if (n<3) then
+					R = matrix.mul(U,matrix.mul(D,matrix.transpose(V)))
+				else
+					R = matrix.mul(U,matrix.transpose(matrix.mul(V,D)))
+				end
+				-- Cheirality (points in front of the camera) constraint assuming perfect
+				-- point correspondence	 
+				--size 1x3
+				a = matrix.mul(q_2,E)
+				b = cross_vec3(q_1,{{a[1],a[2],0}})
+				c = cross_vec3(q_2,matrix.mul(matrix.mul(q_1,matrix.transpose(E)),diag({1,1,0})))
+				d = cross_vec3(a,b)
+
+				P = matrix.concath(R,matrix.transpose(t)) --3x4
+				C = matrix.mul(c,P) --1x4
+				Q = matrix.concath(matrix.mulnum(d,C[1][4]), 
+					matrix.mulnum(matrix.mul(d,{{C[1][1]},{C[1][2]},{C[1][3]}}),-1))  --1x4
+
+				if (Q[1][3]*Q[1][4] >= 0) then
+					c_2 = matrix.mul(P,matrix.transpose(Q)) --3x1
+					if (c_2[3][1]*Q[1][4] >= 0) then
+						R_all[m] = R
+						t_all[m] = t
+						break
+					end
+				end
+			end
+			m = m + 1
+		end
+	end
+	return E_all,R_all,t_all,Eo_all
 
 end
