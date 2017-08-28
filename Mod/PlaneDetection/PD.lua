@@ -295,6 +295,15 @@ end
 -- TODO
 -- function null
 --function lu
+--function eig
+
+local function isreal( num )
+	if ((num <= 0) == false) and ((num > 0) == false) then
+		return false
+	else
+		return true
+	end
+end
 
 local function onlydoforA( _A )
 	local A = {}
@@ -484,7 +493,6 @@ local D = {{0,1,0},{-1,0,0},(0,0,1)};
 local z,x,y
 local p_z6,p_z7,Eo = {}
 local U,V,E,R,t,a,b,c,d,P,C,Q,c_2= {}
-local R_all,t_all,E_all,Eo_all = {}
 function PD.fivePoint( pts1,pts2,K1,K2 )
 	-- local N = 5
 	-- local oneN = imP.ones(1,N)	
@@ -655,18 +663,18 @@ function PD.fivePoint( pts1,pts2,K1,K2 )
 
 	local m = 0
 	for n = 1,10 do
-		if isreal(e_val(n)) = 1 then --TODO function isreal
+		if isreal(e_val[n]) = true then 
 			m = m+1
 		end
 	end
 
-	-- local R_all,t_all,E_all,Eo_all = imP.zeros(m,1)
+	local R_all,t_all,E_all,Eo_all = imP.zeros(m,1)
 	m = 1
 	-- local z,x,y
 	-- local p_z6,p_z7,Eo = {}
 	-- local U,V,E,R,t,a,b,c,d,P,C,Q,c_2= {}
 	for n = 1,10 do 
-		if isreal(e_val(n)) = 1 then --TODO function isreal
+		if isreal(e_val[n]) = true then 
 			z = e_val(n)
 
 			--Backsubstition
