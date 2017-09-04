@@ -1,12 +1,7 @@
 # Plane-Detection-with-a-Single-Moving-Camera
 
-The overlapping processes which make up our reconstruction pipeline
-![image](https://github.com/tatfook/3d-from-infrared-picture/blob/master/overview.jpg)
-
-This demonstrates the system described in the paper "Live Dense Reconstruction with a Single Moving Camera" by Richard Newcombe and Andrew Davison from CVPR 2010. These reconstructions are built in real-time just with a single computer-connected camera as it browses a desk. Look for the advanced augmented reality demo towards the end of the video.
-
-[![ScreenShot](https://github.com/tatfook/3d-from-infrared-picture/blob/master/heading.jpg)](https://www.youtube.com/watch?v=CZiSK7OMANw)
-
 [ARKit Introduction](https://www.youtube.com/watch?v=LLRweyZ1KpA)
+ARKit，一款全面支持AR增强现实开发的SDK。 ARKit支持所有安装了ios 11的iphone与ipad
 
 [ARCore Introduction](https://www.youtube.com/watch?v=ttdPqly4OF8)
+ARCore，Google 推出的增强现实 SDK。软件开发者现在就可以下载它去开发 Android 平台上的增强现实应用，或者为他们的 App 增加增强现实功能。支持最新的Google Pixel，Galaxy S8手机
